@@ -198,6 +198,7 @@ func (v *V2Ray) Configuration(info PriorInfo) (c Configuration, err error) {
 		Protocol: v.Protocol,
 	}
 	port, _ := strconv.Atoi(v.Port)
+	aid, _ := strconv.Atoi(v.Aid)
 	switch strings.ToLower(v.Protocol) {
 	case "vmess", "vless":
 		id := v.ID
@@ -210,11 +211,6 @@ func (v *V2Ray) Configuration(info PriorInfo) (c Configuration, err error) {
 				return Configuration{}, fmt.Errorf("please sync datetime first. Your datetime is %v, and the "+
 					"correct datetime is %v", time.Now().Local().Format(ntp.DisplayFormat), t.Local().Format(ntp.DisplayFormat))
 			}
-			if len(v.Aid) > 0 && v.Aid != "0" {
-				log.Error("We do not support alterID > 0 since v1.5.6 due to security; please contact your server provider or " +
-					"downgrade v2rayA to v1.5.5")
-				return Configuration{}, fmt.Errorf("unsupported alterID > 0: check the log for more information")
-			}
 			security := v.Security
 			if security == "" {
 				security = "auto"
@@ -226,7 +222,7 @@ func (v *V2Ray) Configuration(info PriorInfo) (c Configuration, err error) {
 					Users: []coreObj.User{
 						{
 							ID:       id,
-							AlterID:  0,
+							AlterID:  aid,
 							Security: security,
 						},
 					},
