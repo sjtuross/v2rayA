@@ -15,7 +15,7 @@ jobs:
         id: prep
         run: |
           TAG=$(echo $GITHUB_REF | cut -d / -f 3)
-          IMAGE="mzz2017/v2raya"
+          IMAGE="sjtuross/v2raya"
           echo ::set-output name=image::${IMAGE}
           echo ::set-output name=tag::${TAG:1}
 
