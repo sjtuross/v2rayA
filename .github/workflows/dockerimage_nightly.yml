@@ -39,7 +39,6 @@ jobs:
           platforms: linux/arm,linux/arm64,linux/amd64
           push: true
           tags: |
-            ${{ steps.prep.outputs.image }}:${{ steps.prep.outputs.tag }}
             ${{ steps.prep.outputs.image }}:nightly
           cache-from: type=gha
           cache-to: type=gha,mode=max
