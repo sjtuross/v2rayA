@@ -108,7 +108,7 @@
             </b-select>
           </b-field>
           <b-field
-            v-show="v2ray.tls === 'xtls'"
+            v-show="v2ray.tls === 'xtls' || (v2ray.protocol ==='vless' && v2ray.tls === 'tls' && v2ray.net === 'tcp')"
             label="Flow"
             label-position="on-border"
           >
@@ -909,7 +909,9 @@ export default {
       "xtls-rprx-direct",
       "xtls-rprx-direct-udp443",
       "xtls-rprx-splice",
-      "xtls-rprx-splice-udp443"
+      "xtls-rprx-splice-udp443",
+      "xtls-rprx-vision",
+      "xtls-rprx-vision-udp443"
     ],
     flowSelected: null
   }),

@@ -3,15 +3,16 @@ package serverObj
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
-	"github.com/v2rayA/v2rayA/common/ntp"
 	"net"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+	"github.com/v2rayA/v2rayA/common/ntp"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/v2rayA/v2rayA/common"
@@ -92,9 +93,6 @@ func ParseVlessURL(vless string) (data *V2Ray, err error) {
 	}
 	if data.TLS == "" {
 		data.TLS = "none"
-	}
-	if data.Flow == "" {
-		data.Flow = "xtls-rprx-direct"
 	}
 	if data.Net == "mkcp" || data.Net == "kcp" {
 		data.Path = u.Query().Get("seed")
@@ -355,14 +353,22 @@ func (v *V2Ray) Configuration(info PriorInfo) (c Configuration, err error) {
 				}
 				core.StreamSettings.TLSSettings.Alpn = alpn
 			}
+			if strings.ToLower(v.Protocol) == "vless" && strings.ToLower(v.Net) == "tcp" && v.Flow != "" {
+				vnext := core.Settings.Vnext.([]coreObj.Vnext)
+				vnext[0].Users[0].Flow = v.Flow
+				core.Settings.Vnext = vnext
+			}
+			if strings.ToLower(v.Net) == "tcp" || strings.ToLower(v.Net) == "ws" || strings.ToLower(v.Net) == "h2" || strings.ToLower(v.Net) == "grpc" {
+				core.StreamSettings.TLSSettings.Fingerprint = "chrome"
+			}
 		} else if strings.ToLower(v.TLS) == "xtls" {
 			core.StreamSettings.Security = "xtls"
 			core.StreamSettings.XTLSSettings = &coreObj.TLSSettings{}
 			// SNI
-			if v.Host != "" {
+			if v.SNI != "" {
 				core.StreamSettings.XTLSSettings.ServerName = v.Host
 			} else if v.Host != "" {
-				core.StreamSettings.TLSSettings.ServerName = v.Host
+				core.StreamSettings.XTLSSettings.ServerName = v.Host
 			}
 			if v.AllowInsecure {
 				core.StreamSettings.XTLSSettings.AllowInsecure = true
@@ -416,7 +422,7 @@ func (v *V2Ray) ExportToURL() string {
 			setValue(&query, "alpn", v.Alpn)
 			setValue(&query, "allowInsecure", strconv.FormatBool(v.AllowInsecure))
 		}
-		if v.TLS == "xtls" {
+		if v.TLS == "xtls" || (v.Protocol == "vless" && v.TLS == "tls" && v.Net == "tcp" && v.Flow != "") {
 			setValue(&query, "flow", v.Flow)
 		}
 
