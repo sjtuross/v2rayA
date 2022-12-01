@@ -4,6 +4,13 @@ import (
 	libSha256 "crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/tidwall/gjson"
 	"github.com/v2rayA/v2rayA/common/files"
 	"github.com/v2rayA/v2rayA/common/httpClient"
@@ -11,12 +18,6 @@ import (
 	"github.com/v2rayA/v2rayA/core/v2ray/asset"
 	"github.com/v2rayA/v2rayA/db/configure"
 	"github.com/v2rayA/v2rayA/pkg/util/log"
-	"io"
-	"net/http"
-	"os"
-	"strings"
-	"sync"
-	"time"
 )
 
 type GFWList struct {
@@ -33,7 +34,7 @@ func GetRemoteGFWListUpdateTime(c *http.Client) (gfwlist GFWList, err error) {
 	if !g.UpdateTime.IsZero() {
 		return g, nil
 	}
-	resp, err := httpClient.HttpGetUsingSpecificClient(c, "https://hubmirror.v2raya.org/api/v2rayA/dist-v2ray-rules-dat/tags")
+	resp, err := httpClient.HttpGetUsingSpecificClient(c, "https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/tags")
 	if err != nil {
 		err = fmt.Errorf("failed to get latest version of GFWList: %w", err)
 		return
@@ -108,24 +109,24 @@ func UpdateLocalGFWList() (localGFWListVersionAfterUpdate string, err error) {
 	if err != nil {
 		return "", err
 	}
-	u := fmt.Sprintf(`https://hubmirror.v2raya.org/v2rayA/dist-v2ray-rules-dat/raw/%v/geosite.dat`, gfwlist.Tag)
+	u := fmt.Sprintf(`https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/%v/geosite.dat`, gfwlist.Tag)
 	if err = asset.Download(u, pathSiteDat+".new"); err != nil {
-		log.Warn("UpdateLocalGFWList: %v", err)
+		log.Warn("UpdateLocalGFWList: LoyalsoldierSite.dat[%v]", err)
 		return
 	}
-	u2 := fmt.Sprintf(`https://hubmirror.v2raya.org/v2rayA/dist-v2ray-rules-dat/raw/%v/geosite.dat.sha256sum`, gfwlist.Tag)
+	u2 := fmt.Sprintf(`https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/%v/geosite.dat.sha256sum`, gfwlist.Tag)
 	siteDatSha256, err := httpGet(u2)
 	if err != nil {
 		err = fmt.Errorf("%w: %v", FailCheckSha, err)
-		log.Warn("UpdateLocalGFWList: %v", err)
+		log.Warn("UpdateLocalGFWList: LoyalsoldierSite.dat[%v]", err)
 		return "", err
 	}
-	var sha256 string
+	var siteSha256 string
 	if fields := strings.Fields(siteDatSha256); len(fields) != 0 {
-		sha256 = fields[0]
+		siteSha256 = fields[0]
 	}
-	if !checkSha256(pathSiteDat+".new", sha256) {
-		err = fmt.Errorf("UpdateLocalGFWList: %v", DamagedFile)
+	if !checkSha256(pathSiteDat+".new", siteSha256) {
+		err = fmt.Errorf("UpdateLocalGFWList: LoyalsoldierSite.dat[%v]", DamagedFile)
 		return
 	}
 	_ = os.Chtimes(pathSiteDat+".new", gfwlist.UpdateTime, gfwlist.UpdateTime)
@@ -137,6 +138,37 @@ func UpdateLocalGFWList() (localGFWListVersionAfterUpdate string, err error) {
 		return "", err
 	}
 	log.Info("download[%v]: %v -> SUCCESS\n", i+1, u)
+
+	pathIPDat, err := asset.GetV2rayLocationAsset("LoyalsoldierIP.dat")
+	if err != nil {
+		return "", err
+	}
+	p := fmt.Sprintf(`https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/%v/geoip.dat`, gfwlist.Tag)
+	if err = asset.Download(p, pathIPDat+".new"); err != nil {
+		log.Warn("UpdateLocalGFWList: LoyalsoldierIP.dat[%v]", err)
+		return
+	}
+	p2 := fmt.Sprintf(`https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/%v/geoip.dat.sha256sum`, gfwlist.Tag)
+	ipDatSha256, err := httpGet(p2)
+	if err != nil {
+		err = fmt.Errorf("%w: %v", FailCheckSha, err)
+		log.Warn("UpdateLocalGFWList: LoyalsoldierIP.dat[%v]", err)
+		return "", err
+	}
+	var ipSha256 string
+	if fields := strings.Fields(ipDatSha256); len(fields) != 0 {
+		ipSha256 = fields[0]
+	}
+	if !checkSha256(pathIPDat+".new", ipSha256) {
+		err = fmt.Errorf("UpdateLocalGFWList: LoyalsoldierIP.dat[%v]", DamagedFile)
+		return
+	}
+	_ = os.Chtimes(pathIPDat+".new", gfwlist.UpdateTime, gfwlist.UpdateTime)
+	if err := os.Rename(pathIPDat+".new", pathIPDat); err != nil {
+		return "", err
+	}
+	log.Info("download[%v]: %v -> SUCCESS\n", i+2, u)
+
 	return
 }
 
