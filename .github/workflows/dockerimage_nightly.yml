@@ -3,6 +3,7 @@ name: v2raya-nightly-docker
 on:
   push:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   build:
