@@ -2,9 +2,10 @@ package iptables
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/v2rayA/v2rayA/common/cmds"
 	"github.com/v2rayA/v2rayA/db/configure"
-	"strings"
 )
 
 type tproxy struct {
@@ -16,7 +17,7 @@ var Tproxy tproxy
 func (t *tproxy) AddIPWhitelist(cidr string) {
 	// avoid duplication
 	t.RemoveIPWhitelist(cidr)
-	pos := 8
+	pos := 7
 	if configure.GetSettingNotNil().AntiPollution != configure.AntipollutionClosed {
 		pos += 3
 	}
@@ -65,7 +66,6 @@ iptables -w 2 -t mangle -A TP_PRE -p udp -m mark --mark 0x40/0xc0 -j TPROXY --on
 
 iptables -w 2 -t mangle -A TP_RULE -j CONNMARK --restore-mark
 iptables -w 2 -t mangle -A TP_RULE -m mark --mark 0x40/0xc0 -j RETURN
-iptables -w 2 -t mangle -A TP_RULE -i br-+ -j RETURN
 iptables -w 2 -t mangle -A TP_RULE -i docker+ -j RETURN
 iptables -w 2 -t mangle -A TP_RULE -i veth+ -j RETURN
 iptables -w 2 -t mangle -A TP_RULE -i ppp+ -j RETURN
@@ -126,7 +126,6 @@ ip6tables -w 2 -t mangle -A TP_PRE -p udp -m mark --mark 0x40/0xc0 -j TPROXY --o
 
 ip6tables -w 2 -t mangle -A TP_RULE -j CONNMARK --restore-mark
 ip6tables -w 2 -t mangle -A TP_RULE -m mark --mark 0x40/0xc0 -j RETURN
-ip6tables -w 2 -t mangle -A TP_RULE -i br-+ -j RETURN
 ip6tables -w 2 -t mangle -A TP_RULE -i docker+ -j RETURN
 ip6tables -w 2 -t mangle -A TP_RULE -i veth+ -j RETURN
 ip6tables -w 2 -t mangle -A TP_RULE -i ppp+ -j RETURN
@@ -156,7 +155,7 @@ ip6tables -w 2 -t mangle -A TP_MARK -j CONNMARK --save-mark
 `
 	}
 	return Setter{
-		Cmds:      commands,
+		Cmds: commands,
 	}
 }
 
@@ -194,6 +193,6 @@ ip6tables -w 2 -t mangle -X TP_MARK
 `
 	}
 	return Setter{
-		Cmds:      commands,
+		Cmds: commands,
 	}
 }
