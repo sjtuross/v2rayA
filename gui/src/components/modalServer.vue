@@ -177,6 +177,10 @@
               <option value="chacha20-ietf-poly1305">
                 chacha20-ietf-poly1305
               </option>
+              <option value="2022-blake3-aes-128-gcm">2022-blake3-aes-128-gcm</option>
+              <option value="2022-blake3-aes-256-gcm">2022-blake3-aes-256-gcm</option>
+              <option value="2022-blake3-chacha8-poly1305">2022-blake3-chacha8-poly1305</option>
+              <option value="2022-blake3-chacha20-poly1305">2022-blake3-chacha20-poly1305</option>
               <option value="plain">plain</option>
               <option value="none">none</option>
             </b-select>
