@@ -39,6 +39,14 @@ jobs:
       with:
         path: |
           web.tar.gz
+    - name: Deploy Demo Site repository
+      uses: crazy-max/ghaction-github-pages@v2.5.0
+      with:
+        repo: sjtuross/v2raya-web
+        target_branch: main
+        build_dir: web
+      env:
+          GH_PAT: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   Build_v2rayA_Binaries:
     runs-on: ubuntu-latest
     needs: [Build_v2rayA_Web]
