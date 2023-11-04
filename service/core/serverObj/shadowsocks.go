@@ -327,7 +327,7 @@ func (s *Shadowsocks) ConfigurationMT(info PriorInfo) (c Configuration, err erro
 
 func (s *Shadowsocks) Configuration(info PriorInfo) (c Configuration, err error) {
 	switch s.Cipher {
-	case "aes-256-gcm", "aes-128-gcm", "chacha20-poly1305", "chacha20-ietf-poly1305", "plain", "none":
+	case "aes-256-gcm", "aes-128-gcm", "chacha20-poly1305", "chacha20-ietf-poly1305", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha8-poly1305", "2022-blake3-chacha20-poly1305", "plain", "none":
 	default:
 		return c, fmt.Errorf("unsupported shadowsocks encryption method: %v", s.Cipher)
 	}
