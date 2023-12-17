@@ -1,0 +1,44 @@
+name: v2raya-nightly-docker
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Prepare
+        id: prep
+        run: |
+          TAG=$(git log --pretty=format:"%cd" --date=format:%Y%m%d $(git show -s --format=%H) -1)
+          IMAGE="sjtuross/v2raya"
+          echo image=${IMAGE} >> $GITHUB_OUTPUT
+          echo tag=${TAG} >> $GITHUB_OUTPUT
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.0.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.0.0
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3.0.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v5.0.0
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: Dockerfile.nightly
+          platforms: linux/arm64,linux/amd64
+          push: true
+          tags: |
+            ${{ steps.prep.outputs.image }}:${{ steps.prep.outputs.tag }}
+            ${{ steps.prep.outputs.image }}:nightly
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

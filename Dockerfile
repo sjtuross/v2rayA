@@ -21,8 +21,9 @@ RUN export VERSION=$(cat ./version) && CGO_ENABLED=0 go build -ldflags="-X githu
 
 FROM v2fly/v2fly-core
 COPY --from=builder /build/service/v2raya /usr/bin/
-RUN wget -O /usr/local/share/v2ray/LoyalsoldierSite.dat https://raw.githubusercontent.com/mzz2017/dist-v2ray-rules-dat/master/geosite.dat
-RUN apk add --no-cache iptables ip6tables tzdata
+RUN wget -O /usr/local/share/v2ray/LoyalsoldierSite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+RUN wget -O /usr/local/share/v2ray/LoyalsoldierIP.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
+RUN apk add --no-cache iptables iptables-legacy ip6tables nftables tzdata
 LABEL org.opencontainers.image.source=https://github.com/v2rayA/v2rayA
 EXPOSE 2017
 VOLUME /etc/v2raya
